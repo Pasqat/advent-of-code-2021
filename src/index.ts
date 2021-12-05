@@ -1,168 +1,84 @@
 import * as fs from "fs";
 import * as path from "path";
 
-function bingo() {
-  const table = fs
-    .readFileSync(path.join(__dirname, "day4.input"), "utf8")
-    .split("\n\n");
-  const numbers = table[0].split(",").map((n) => Number(n));
+function printDiagram(diagram: string[][] | number[][]) {
+  for (let l of diagram) {
+    let line: string = "";
+    for (let w of l) {
+      line = line + w;
+    }
+    console.log(line);
+  }
+  return;
+}
 
-  const boards = table
-    .slice(1, table.length)
-    .filter((e) => e !== "")
-    .map((board) =>
-      board
+function diagram() {
+  const lineSegment = fs
+    .readFileSync(path.join(__dirname, "day5.input"), "utf8")
+    .trim()
+    .split("\n")
+    .map((lines) =>
+      lines
         .trim()
-        .split("\n")
-        .map((line) =>
-          line
-            .split(" ")
-            .filter((n) => n !== "")
-            .map((n) => Number(n))
-        )
+        .split("->")
+        .map((coor) => coor.split(",").map((e) => Number(e)))
     );
 
-  let resultBoard: number[][][] = Array.from(boards);
-  let winningNumber = 0;
+  // find max x and y to build the empty diagram
+  let maxX: number = Math.max(
+    ...lineSegment.flatMap((lineSegment) => lineSegment[0])
+  );
+  let maxY: number = Math.max(
+    ...lineSegment.flatMap((lineSegment) => lineSegment[1])
+  );
+  let diagram = new Array(maxX + 1);
+  for (let i = 0; i < diagram.length; i++) {
+    diagram[i] = new Array(maxY + 1).fill(".");
+  }
 
-  // iterate each extracted number
-  loop0: for (let n = 0; n < numbers.length; n++) {
-    // iterate each board
-    loop1: for (let b = 0; b < boards.length; b++) {
-      // iterate each row of the board
-      loop2: for (let i = 0; i < boards[b].length; i++) {
-        // iterate each number of the row
-        loop3: for (let j = 0; j < boards[b][i].length; j++) {
-          let column: number[] = boards[b].map((e) => e[j]);
+  for (let l = 0; l < lineSegment.length; l++) {
+    const line = lineSegment[l];
+    const segmentS = line[0];
+    const segmentE = line[1];
+    const x1 = segmentS[0];
+    const x2 = segmentE[0];
+    const y1 = segmentS[1];
+    const y2 = segmentE[1];
+    // console.log(x1, "->", x2, "...", y1, "->", y2);
 
-          if (column.length === 5 && column.every((i) => i === 0)) {
-            winningNumber = numbers[n - 1];
-            const re = resultBoard[b]
-              .flatMap((e) => e)
-              .reduce((a, c) => a + c, 0);
+    if (x1 === x2) {
+      if (y1 > y2) {
+        for (let i = y1; i >= y2; i--) {
+          // console.log("x=x, y1>y2", i, y1, y2);
+          diagram[i][x1] === "." ? (diagram[i][x1] = 1) : diagram[i][x1]++;
+        }
+      } else if (y1 < y2) {
+        for (let i = y1; i <= y2; i++) {
+          // console.log("x=x, y1<y2", i, y1, y2);
+          diagram[i][x1] === "." ? (diagram[i][x1] = 1) : diagram[i][x1]++;
+        }
+      }
+    }
 
-            console.log("The winning number is", re * winningNumber);
-            break loop0;
-          }
-
-          if (resultBoard[b][i].every((i) => i === 0)) {
-            winningNumber = numbers[n];
-            const re = resultBoard[b]
-              .flatMap((e) => e)
-              .reduce((a, c) => a + c, 0);
-
-            console.log("The winning number is", re * winningNumber);
-            break loop0;
-          }
-
-          if (numbers[n] === boards[b][i][j]) {
-            resultBoard[b][i][j] = 0;
-          }
+    if (y1 === y2) {
+      if (x1 > x2) {
+        for (let i = x1; i >= x2; i--) {
+          // console.log("y=y, x1>x2", i, x1, x2);
+          diagram[y1][i] === "." ? (diagram[y1][i] = 1) : diagram[y1][i]++;
+        }
+      }
+      if (x1 < x2) {
+        for (let i = x1; i <= x2; i++) {
+          // console.log("y=y, x1<x2", i, x1, x2);
+          diagram[y1][i] === "." ? (diagram[y1][i] = 1) : diagram[y1][i]++;
         }
       }
     }
   }
+
+  // printDiagram(diagram);
+  console.log(diagram.flatMap(e => e).filter(e => e>1).length)
+  return diagram;
 }
 
-function bingoLooser() {
-  const table = fs
-    .readFileSync(path.join(__dirname, "day4.input"), "utf8")
-    .split("\n\n");
-  const numbers = table[0].split(",").map((n) => Number(n));
-
-  let boards = table
-    .slice(1, table.length)
-    .filter((e) => e !== "")
-    .map((board) =>
-      board
-        .trim()
-        .split("\n")
-        .map((line) =>
-          line
-            .split(" ")
-            .filter((n) => n !== "")
-            .map((n) => Number(n))
-        )
-    );
-
-  let resultBoards: number[][][] = Array.from(boards);
-  let winningNumber = 0;
-  let bufferBoards = [...resultBoards];
-
-  // iterate each extracted number
-  loop0: for (let n = 0; n < numbers.length; n++) {
-    // iterate each board
-    boards = [...bufferBoards]
-    resultBoards = [...bufferBoards]
-    loop1: for (let b = 0; b < boards.length; b++) {
-      // iterate each row of the board
-      loop2: for (let i = 0; i < boards[b].length; i++) {
-        // iterate each number of the row
-        loop3: for (let j = 0; j < boards[b][i].length; j++) {
-          let column: number[] = boards[b].map((e) => e[j]);
-
-          if (numbers[n] === boards[b][i][j]) {
-            resultBoards[b][i][j] = 0;
-          }
-
-          // check if a column is winner
-          if (column.length === 5 && column.every((i) => i === 0)) {
-            if (boards.length !== 1) {
-              bufferBoards.splice(b, 1);
-              // resultBoards.splice(b, 1);
-              console.log("splice a column for the board", b);
-              continue loop1;
-            }
-
-            winningNumber = numbers[n];
-            const re = resultBoards[b]
-              .flatMap((e) => e)
-              .reduce((a, c) => a + c, 0);
-
-            console.log(
-              "The looser number is",
-              re * winningNumber,
-              "row",
-              resultBoards[b],
-              re,
-              winningNumber,
-              "\n"
-            );
-
-            break loop0;
-          }
-
-          // check if a row is winner
-          if (resultBoards[b][i].every((i) => i === 0)) {
-            if (boards.length !== 1) {
-              bufferBoards.splice(b, 1);
-              // resultBoards.splice(b, 1);
-              console.log("splice a row for the board", b);
-              continue loop1;
-            }
-
-            winningNumber = numbers[n];
-            const re = resultBoards[b]
-              .flatMap((e) => e)
-              .reduce((a, c) => a + c, 0);
-
-            console.log(
-              "The looser number is",
-              re * winningNumber,
-              "row",
-              resultBoards[b],
-              re,
-              winningNumber,
-              "\n"
-            );
-
-            break loop0;
-          }
-        }
-      }
-    }
-  }
-}
-
-bingo();
-bingoLooser();
+diagram();
