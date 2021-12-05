@@ -49,12 +49,10 @@ function diagram() {
     if (x1 === x2) {
       if (y1 > y2) {
         for (let i = y1; i >= y2; i--) {
-          // console.log("x=x, y1>y2", i, y1, y2);
           diagram[i][x1] === "." ? (diagram[i][x1] = 1) : diagram[i][x1]++;
         }
       } else if (y1 < y2) {
         for (let i = y1; i <= y2; i++) {
-          // console.log("x=x, y1<y2", i, y1, y2);
           diagram[i][x1] === "." ? (diagram[i][x1] = 1) : diagram[i][x1]++;
         }
       }
@@ -63,21 +61,57 @@ function diagram() {
     if (y1 === y2) {
       if (x1 > x2) {
         for (let i = x1; i >= x2; i--) {
-          // console.log("y=y, x1>x2", i, x1, x2);
           diagram[y1][i] === "." ? (diagram[y1][i] = 1) : diagram[y1][i]++;
         }
       }
       if (x1 < x2) {
         for (let i = x1; i <= x2; i++) {
-          // console.log("y=y, x1<x2", i, x1, x2);
           diagram[y1][i] === "." ? (diagram[y1][i] = 1) : diagram[y1][i]++;
+        }
+      }
+    }
+
+    if (x1 > x2 && y1 > y2) {
+      console.log(x1, y1, "->", x2, y2);
+    }
+
+    if (Math.abs(x1 - x2) === Math.abs(y1 - y2)) {
+      // console.log("diag", x1, x2, y1, y2);
+
+      if (x1 > x2) {
+        let j = y1;
+        // console.log("diag", x1, x2, y1, y2);
+        for (let i = x1; i >= x2; i--) {
+          if (y1 < y2) {
+            diagram[j][i] === "." ? (diagram[j][i] = 1) : diagram[j][i]++;
+            j++;
+          }
+
+          if (y1 > y2) {
+            // console.log("x1>x2  y1>y2");
+            diagram[j][i] === "." ? (diagram[j][i] = 1) : diagram[j][i]++;
+            j--;
+          }
+        }
+      }
+      if (x1 < x2) {
+        let j = y1;
+        for (let i = x1; i <= x2; i++) {
+          if (y1 < y2) {
+            diagram[j][i] === "." ? (diagram[j][i] = 1) : diagram[j][i]++;
+            j++;
+          }
+          if (y1 > y2) {
+            diagram[j][i] === "." ? (diagram[j][i] = 1) : diagram[j][i]++;
+            j--;
+          }
         }
       }
     }
   }
 
-  // printDiagram(diagram);
-  console.log(diagram.flatMap(e => e).filter(e => e>1).length)
+  printDiagram(diagram);
+  console.log(diagram.flatMap((e) => e).filter((e) => e > 1).length);
   return diagram;
 }
 
