@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import {arrFormFile} from './arr-from-file.ts'
+// import {arrFormFile} from './arr-from-file'
 
 fs.readFile("./src/data1.txt", "utf8", function (err, data): number | void {
   if (err) {
