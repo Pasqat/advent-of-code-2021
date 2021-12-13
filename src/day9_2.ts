@@ -1,13 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
 
-const illegalPoints = {
-  ")": 3,
-  "]": 57,
-  "}": 1197,
-  ">": 25137,
-};
-
 const mismatch = {
   ")": "(",
   "]": "[",
@@ -15,28 +8,87 @@ const mismatch = {
   ">": "<",
 };
 
-function findIllegalChar(data: string[][]) {
-  let sum: number = 0;
+const closigChar = {
+  "(": ")",
+  "[": "]",
+  "{": "}",
+  "<": ">",
+};
+
+type Point = {
+  ")": number;
+  "]": number;
+  "}": number;
+  ">": number;
+};
+
+const points: Point = {
+  ")": 1,
+  "]": 2,
+  "}": 3,
+  ">": 4,
+};
+
+function filterIncomplete(data: string[][]) {
+  let incompletData: string[][] = [];
 
   data.forEach((row) => {
     let stack: string[] = [];
+    let isCorrupted: Boolean = false;
+
     row.forEach((char) => {
       if (char === "(" || char === "[" || char === "{" || char === "<") {
         stack.push(char);
       } else if (char === ")" || char === "]" || char === "}" || char === ">") {
         if (stack.length === 0) {
-          console.log(illegalPoints[char]);
+          return (isCorrupted = true);
         } else {
           const last = stack.pop();
           if (mismatch[char] !== last) {
-            return (sum += illegalPoints[char]);
+            return (isCorrupted = true);
           }
         }
       }
     });
+    if (stack.length > 0 && !isCorrupted) {
+      return incompletData.push(row);
+    }
   });
 
-  return sum
+  return incompletData;
+}
+
+function closingChar(data: string[][]) {
+  let scoreTable: number[] = [];
+
+  data.forEach((row) => {
+    let score: number = 0;
+    let stack: string[] = [];
+    let closingStack: string[] = [];
+
+    row.forEach((char) => {
+      if (char === "(" || char === "[" || char === "{" || char === "<") {
+        stack.push(char);
+        closingStack.unshift(closigChar[char]);
+      } else if (char === ")" || char === "]" || char === "}" || char === ">") {
+        if (stack.length === 0) {
+          return;
+        } else {
+          stack.pop();
+          closingStack.shift();
+        }
+      }
+    });
+    for (let char of closingStack) {
+      score = score * 5;
+      score += points[char as keyof Point];
+    }
+
+    scoreTable.push(score);
+  });
+  scoreTable.sort((a, b) => a - b);
+
+  return scoreTable[(scoreTable.length - 1) / 2];
 }
 
 function main() {
@@ -46,9 +98,11 @@ function main() {
     .split("\n")
     .map((line) => line.split(""));
 
-  // const points = findIllegalChar(data);
+  let incompleteData = filterIncomplete(data);
 
-  console.log(points);
+  let middleScore = closingChar(incompleteData);
+
+  console.log(middleScore);
 }
 
 main();
