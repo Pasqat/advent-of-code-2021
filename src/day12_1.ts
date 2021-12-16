@@ -25,7 +25,7 @@ interface WalkDfs {
 
 interface WalkDfsIterative {
   // (start: string): number;
-  (start: string): string[];
+  (start: string): string[][];
 }
 
 class Caves {
@@ -129,16 +129,29 @@ Caves.prototype.walkDfsRecursive = function (start: string) {
   return total;
 };
 
+// Need to be deeply changed in order to have all different paths that
+// starts with "start" and ends with "end", taking into account that
+// small caves (like "a" and "b") can be walked only once.
 Caves.prototype.walkIterative = function (start: string) {
-  const result: string[] = [];
+  const result: string[][] = [];
+  let path: string[] = [];
   const stack = [start];
   const visited: Visited = {};
+  let total = this.total;
+
   visited[start] = true;
   let currentNode;
+
   while (stack.length) {
     currentNode = stack.pop();
+    if (currentNode === "end") {
+      path.push(currentNode);
+      result.push(path);
+      path = [];
+      total++;
+    }
     if (currentNode) {
-      result.push(currentNode);
+      path.push(currentNode);
       this.adjacencyList[currentNode].forEach((neighbor: string) => {
         if (!visited[neighbor]) {
           if (neighbor === neighbor.toLowerCase()) {
@@ -148,12 +161,10 @@ Caves.prototype.walkIterative = function (start: string) {
         }
       });
     }
+    console.log(stack, result, visited, total);
   }
   return result;
 };
-
-// this was a bit useless because it doesn't explain a lot. I Will follow
-// https://adrianmejia.com/data-structures-for-beginners-graphs-time-complexity-tutorial/
 
 function main() {
   const data = fs
@@ -170,7 +181,7 @@ function main() {
   const result = caves.walkIterative("start");
 
   console.log(result);
-  return;
+  return result;
 }
 
 main();
