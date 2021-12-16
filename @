@@ -1,0 +1,86 @@
+import * as fs from "fs";
+import * as path from "path";
+
+// For this problem, it is obvious I need to use graph,
+// as tryed by ThePrimeagen itself. The problem is that
+// I really don't know how to use graph. I will follow
+// https://www.freecodecamp.org/news/8-essential-graph-algorithms-in-javascript/
+// and try to implement it.
+
+interface AdjacencyList {
+  [key: string]: string[];
+}
+
+class Caves {
+  adjacencyList: AdjacencyList;
+
+  constructor() {
+    this.adjacencyList = {};
+  }
+  addNode(node: string) {
+    if (!this.adjacencyList[node]) {
+      this.adjacencyList[node] = [];
+    }
+  }
+  addEdge(source: string, destination: string) {
+    if (!this.adjacencyList[source]) {
+      this.addNode(source);
+    }
+    if (!this.adjacencyList[destination]) {
+      this.addNode(destination);
+    }
+    this.adjacencyList[source].push(destination);
+    this.adjacencyList[destination].push(source);
+  }
+  removeEdge(source: string, destination: string) {
+    this.adjacencyList[source] = this.adjacencyList[source].filter(
+      (node) => node !== destination
+    );
+    this.adjacencyList[destination] = this.adjacencyList[destination].filter(
+      (node) => node !== source
+    );
+  }
+  removeNode(node: string) {
+    while (this.adjacencyList[node]) {
+      const adjacentNode = this.adjacencyList[node].pop();
+      adjacentNode !== undefined ? this.removeEdge(node, adjacentNode) : null;
+    }
+    delete this.adjacencyList[node];
+  }
+}
+
+Caves.prototype.walk = function (start: string) {
+  const queue = [start];
+  const result = [];
+  const visited = {};
+  visited[start] = true;
+  let currentNode;
+  while (queue.length) {
+    currentNode = queue.shift();
+    result.push(currentNode);
+    this.adjacencyList[currentNode].forEach((neighbor: string) => {
+      if (!visited[neighbor]) {
+        visited[neighbor] = true;
+        queue.push(neighbor);
+      }
+    });
+  }
+  return result;
+};
+
+// function walk(data: string[][]) {
+//   const from =
+// }
+
+function main() {
+  const data = fs
+    .readFileSync(path.join(__dirname, "day12.txt"), "utf8")
+    .trim()
+    .split("\n")
+    .map((l) => l.split("-"));
+
+  console.log(data);
+  return;
+}
+
+main();
