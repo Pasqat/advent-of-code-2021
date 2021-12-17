@@ -16,7 +16,7 @@ interface Visited {
 }
 
 interface Walk {
-  (start: string): string[];
+  (start: string): number;
 }
 
 interface WalkDfs {
@@ -39,11 +39,21 @@ class Caves {
     this.adjacencyList = {};
     this.total = 0;
   }
+
   addNode(node: string) {
     if (!this.adjacencyList[node]) {
       this.adjacencyList[node] = [];
     }
   }
+
+  filterEdge(node: string) {
+    this.adjacencyList[node] = this.adjacencyList[node].filter(
+      (neighbor) => neighbor !== "start"
+    );
+  }
+
+  // I'm sure I've to filter start and end here. Start should not be in the
+  // edges array, and end could be not a node.
   addEdge(source: string, destination: string) {
     if (!this.adjacencyList[source]) {
       this.addNode(source);
@@ -54,6 +64,7 @@ class Caves {
     this.adjacencyList[source].push(destination);
     this.adjacencyList[destination].push(source);
   }
+
   removeEdge(source: string, destination: string) {
     this.adjacencyList[source] = this.adjacencyList[source].filter(
       (node) => node !== destination
@@ -62,6 +73,7 @@ class Caves {
       (node) => node !== source
     );
   }
+
   removeNode(node: string) {
     while (this.adjacencyList[node]) {
       const adjacentNode = this.adjacencyList[node].pop();
@@ -70,6 +82,63 @@ class Caves {
     delete this.adjacencyList[node];
   }
 }
+
+Caves.prototype.walk = function (start: string) {
+  let total = this.total;
+  const adjacencyList = this.adjacencyList;
+  let visited: Visited = {};
+  let stack: string[] = [];
+
+  (function walk(node: string) {
+    if (node === "end") {
+      total++;
+      return;
+    }
+    if (visited[node]) {
+      return;
+    }
+    if (node === node.toLowerCase()) {
+      if (!stack.length) {
+        stack.push(node);
+
+        visited[node] = true;
+      }
+    }
+
+    adjacencyList[node].forEach((neighbor) => {
+      if (!visited[neighbor]) {
+        walk(neighbor);
+      }
+    });
+    visited[node] = false;
+  })(start);
+
+  return total;
+};
+
+function main() {
+  const data = fs
+    .readFileSync(path.join(__dirname, "day12.txt"), "utf8")
+    .trim()
+    .split("\n")
+    .map((l) => l.split("-"));
+
+  const caves = new Caves();
+  data.forEach(([from, to]) => {
+    caves.addEdge(from, to);
+  });
+  for (let cave in caves.adjacencyList) {
+    caves.filterEdge(cave);
+  }
+
+  const result = caves.walk("start");
+
+  console.log(result);
+  console.log(caves.adjacencyList);
+  return result;
+}
+
+main();
 
 // Caves.prototype.walk = function (start: string) {
 //   const queue = [start];
@@ -99,89 +168,70 @@ class Caves {
 //   return result;
 // };
 
-Caves.prototype.walkDfsRecursive = function (start: string) {
-  const result: string[] = [];
-  const visited: Visited = {};
-  const adjacencyList = this.adjacencyList;
-  let total = this.total;
+// Caves.prototype.walkDfsRecursive = function (start: string) {
+//   const result: string[] = [];
+//   const visited: Visited = {};
+//   const adjacencyList = this.adjacencyList;
+//   let total = this.total;
 
-  (function walkDfs(node) {
-    console.log(result, visited);
-    if (!node) return null;
-    if (node === "end") {
-      result.push(node);
-      visited[node] = true;
-      console.log("before total", result);
-      console.log("visited", visited);
-      return total++;
-    }
-    if (node === node.toLowerCase()) {
-      visited[node] = true;
-    }
-    result.push(node);
-    adjacencyList[node].forEach((neighbor) => {
-      if (!visited[neighbor]) {
-        return walkDfs(neighbor);
-      }
-    });
-  })(start);
+//   (function walkDfs(node) {
+//     console.log(result, visited);
+//     if (!node) return null;
+//     if (node === "end") {
+//       result.push(node);
+//       visited[node] = true;
+//       console.log("before total", result);
+//       console.log("visited", visited);
+//       return total++;
+//     }
+//     if (node === node.toLowerCase()) {
+//       visited[node] = true;
+//     }
+//     result.push(node);
+//     adjacencyList[node].forEach((neighbor) => {
+//       if (!visited[neighbor]) {
+//         return walkDfs(neighbor);
+//       }
+//     });
+//   })(start);
 
-  return total;
-};
+//   return total;
+// };
 
-// Need to be deeply changed in order to have all different paths that
-// starts with "start" and ends with "end", taking into account that
-// small caves (like "a" and "b") can be walked only once.
-Caves.prototype.walkIterative = function (start: string) {
-  const result: string[][] = [];
-  let path: string[] = [];
-  const stack = [start];
-  const visited: Visited = {};
-  let total = this.total;
+// // Need to be deeply changed in order to have all different paths that
+// // starts with "start" and ends with "end", taking into account that
+// // small caves (like "a" and "b") can be walked only once.
+// // NOTE: I think I need to make an algo al by myself
+// Caves.prototype.walkIterative = function (start: string) {
+//   const result: string[][] = [];
+//   let path: string[] = [];
+//   const stack = [start];
+//   const visited: Visited = {};
+//   let total = this.total;
 
-  visited[start] = true;
-  let currentNode;
+//   visited[start] = true;
+//   let currentNode;
 
-  while (stack.length) {
-    currentNode = stack.pop();
-    if (currentNode === "end") {
-      path.push(currentNode);
-      result.push(path);
-      path = [];
-      total++;
-    }
-    if (currentNode) {
-      path.push(currentNode);
-      this.adjacencyList[currentNode].forEach((neighbor: string) => {
-        if (!visited[neighbor]) {
-          if (neighbor === neighbor.toLowerCase()) {
-            visited[neighbor] = true;
-          }
-          stack.push(neighbor);
-        }
-      });
-    }
-    console.log(stack, result, visited, total);
-  }
-  return result;
-};
-
-function main() {
-  const data = fs
-    .readFileSync(path.join(__dirname, "day12.txt"), "utf8")
-    .trim()
-    .split("\n")
-    .map((l) => l.split("-"));
-
-  const caves = new Caves();
-  data.forEach(([from, to]) => {
-    caves.addEdge(from, to);
-  });
-
-  const result = caves.walkIterative("start");
-
-  console.log(result);
-  return result;
-}
-
-main();
+//   while (stack.length) {
+//     currentNode = stack.pop();
+//     if (currentNode === "end") {
+//       path.push(currentNode);
+//       result.push(path);
+//       path = [];
+//       total++;
+//     }
+//     if (currentNode) {
+//       path.push(currentNode);
+//       this.adjacencyList[currentNode].forEach((neighbor: string) => {
+//         if (!visited[neighbor]) {
+//           if (neighbor === neighbor.toLowerCase()) {
+//             visited[neighbor] = true;
+//           }
+//           stack.push(neighbor);
+//         }
+//       });
+//     }
+//     console.log(stack, result, visited, total);
+//   }
+//   return result;
+// };
